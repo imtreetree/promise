@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .ball{
+            background:red;
+            position:absolute;
+            border-radius: 50%;
+            width:100px;
+            height:100px;
+            
+        }
+        .ball:nth-child(1){
+            margin-top: 8px;
+        }
+        .ball:nth-child(2){
+            margin-top: 132px;
+        }
+        .ball:nth-child(3){
+            margin-top: 264px;
+        }
+    </style>
+</head>
+<body>
+    <div id="ball1" class="ball">
+
+    </div>
+    <div id="ball2" class="ball">
+
+    </div>
+    <div id="ball3" class="ball">
+
+    </div>
+</body>
+<script>
+    let $ = document.querySelector.bind(document)
+
+    function move(ele, target){
+        return new Promise(function (resolve, reject){
+            let left = 0;// getCurrentStyle获取当前的距左
+            let timer = setInterval(function (){
+                left +=5
+                if(left >= target){
+                    ele.style.left = target + 'px'
+                    clearInterval(timer)
+                    resolve()
+                }else {
+                    ele.style.left = left + 'px'
+
+                }
+            }, 16)
+            }
+        )
+
+    }
+
+  /* 1) move($('#ball1'), 500, function(){
+        move($('#ball2'), 500, function(){
+            move($('#ball3'), 500, function(){
+        
+    })
+    })
+    }) */
+
+//2) 返回 promise的
+   // move()
+
+   //3)
+   function * m(){
+       yield move($('#ball1'), 500);
+       yield move($('#ball2'), 500);
+       yield move($('#ball3'), 500);
+   }
+
+   function co(it){
+       return new Promise(function(resolve,reject){
+           function next(){
+               let { value, done } = it.next();
+               if(done){
+                   return resolve(value);
+               }
+               value.then(function (data){
+                   next(data)
+               },reject)
+           }
+           next();
+       })
+   }
+
+   //co(m()).then(function(){
+       console.log('....')
+   //})
+
+   //4
+   async function n(){
+      await move($('#ball1'), 500);
+      await move($('#ball2'), 500);
+      await move($('#ball3'), 500);
+   }
+   n();
+</script>
+</html>

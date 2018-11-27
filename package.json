@@ -1,0 +1,23 @@
+{
+  "name": "promise",
+  "version": "1.0.0",
+  "description": "",
+  "main": "1.promise.js",
+  "dependencies": {
+    "bluebird": "^3.5.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imtreetree/promise.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/imtreetree/promise/issues"
+  },
+  "homepage": "https://github.com/imtreetree/promise#readme"
+}
