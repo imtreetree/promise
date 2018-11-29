@@ -13,7 +13,7 @@ class Promise {
         this.reason = undefined;
         this.onResolvedCallback = [];
         this.onRejectedCallback = [];
-        
+        this.deferred = this.defer;
         try {
             //如果执行这个executor执行时抛出异常应该走下一个then的失败
             executor(this.resolve, this.reject)
@@ -142,5 +142,18 @@ class Promise {
 
         return promise2
     }
+
+    defer() {
+        let dfd = {};
+        dfd.promise = new Promise((resolve, reject) => {
+            dfd.resolve = resolve
+            dfd.reject = reject
+        })
+
+        return dfd
+    }
+
+
+    
 }
-export default Promise;
+
