@@ -14,38 +14,41 @@ class Promise {
         this.onResolvedCallback = [];
         this.onRejectedCallback = [];
         this.deferred = this.defer;
+
+        /**
+         * 只有状态是pending时，才能进行状态的转化
+         * @param {*} value 
+         */
+        let resolve = (value)=> {
+            if (this.status === PENDING) {
+                this.value = value;
+                this.status = FULLFILLED;
+                this.onResolvedCallback.forEach(fn => {
+                    fn();
+                });
+            }
+        }
+
+       let  reject = (reason) => {
+            if(this.status === PENDING){
+                this.reason = reason;
+                this.status = REJECTED;
+                this.onRejectedCallback.forEach(fn =>{
+                    fn();
+                })
+            }
+        }
+
         try {
             //如果执行这个executor执行时抛出异常应该走下一个then的失败
-            executor(this.resolve, this.reject)
+            executor(resolve, reject)
 
         } catch (error) {
             this.reject(error)
         }
     }
 
-    /**
-     * 只有状态是pending时，才能进行状态的转化
-     * @param {*} value 
-     */
-    resolve(value) {
-        if (this.status === PENDING) {
-            this.value = value;
-            this.status = FULLFILLED;
-            this.onResolvedCallback.forEach(fn => {
-                fn();
-            });
-        }
-    }
 
-    reject(reason){
-        if(this.status === PENDING){
-            this.reason = reason;
-            this.status = REJECTED;
-            this.onRejectedCallback.forEach(fn =>{
-                fn();
-            })
-        }
-    }
     /**
      * 核心方法 处理
      * @param {*} promise2 
@@ -143,17 +146,81 @@ class Promise {
         return promise2
     }
 
-    defer() {
-        let dfd = {};
-        dfd.promise = new Promise((resolve, reject) => {
-            dfd.resolve = resolve
-            dfd.reject = reject
-        })
-
-        return dfd
+    catch(onRejected){
+        return this.then(null, onRejected)
     }
+
+    finally(cb){
+        return this.then(data=>{
+            cb();
+            return data;
+
+        },err=>{
+            cb();
+            throw err;
+        })
+    }
+
+    static reject(reason) {
+        return new Promise((resolve, reject) =>{
+          reject(reason);
+        })
+      }
+    static resolve(value) {
+    return new Promise((resolve, reject) =>{
+        resolve(value);
+    })
+    }
+
+    static all(promises){
+        return new Promise((resolve, reject)=>{
+            let arr =[]
+            let i=0
+           function processData(index, data){
+             arr[index] = data;
+             if(++i === promises.length){
+                 resolve(arr)
+             }
+            }
+            for(let i = 0;i<promises.length ;i++){
+                let promise = promises[i]
+                if(typeof promise.then == 'function'){
+                    promise.then(data=>{
+                        processData(i, data)
+                    }, reject)
+                }else{
+                    processData(i, promise)
+                }
+            }
+        })
+    }
+
+    race(promises){
+        return new Promise((resolve, reject)=>{
+            for(let i=0;i<promises.length; i++){
+                let promise = promises[i];
+                if(typeof promise.then == 'function'){
+                    promise.then(resolve, reject)
+                } else{
+                    resolve(promise)
+                }
+            }
+        })
+    }
+
+
 
 
     
 }
+Promise.deferred = Promise.defer = function () {
+    let dfd = {};
+    dfd.promise = new Promise((resolve, reject) => {
+        dfd.resolve = resolve
+        dfd.reject = reject
+    })
+
+    return dfd
+}
+module.exports = Promise
 

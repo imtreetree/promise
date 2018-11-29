@@ -15,6 +15,8 @@ var REJECTED = 'rejected';
 
 var Promise = function () {
     function Promise(executor) {
+        var _this = this;
+
         _classCallCheck(this, Promise);
 
         this.status = PENDING;
@@ -23,54 +25,52 @@ var Promise = function () {
         this.onResolvedCallback = [];
         this.onRejectedCallback = [];
         this.deferred = this.defer;
+
+        /**
+         * 只有状态是pending时，才能进行状态的转化
+         * @param {*} value 
+         */
+        var resolve = function resolve(value) {
+            if (_this.status === PENDING) {
+                _this.value = value;
+                _this.status = FULLFILLED;
+                _this.onResolvedCallback.forEach(function (fn) {
+                    fn();
+                });
+            }
+        };
+
+        var reject = function reject(reason) {
+            if (_this.status === PENDING) {
+                _this.reason = reason;
+                _this.status = REJECTED;
+                _this.onRejectedCallback.forEach(function (fn) {
+                    fn();
+                });
+            }
+        };
+
         try {
             //如果执行这个executor执行时抛出异常应该走下一个then的失败
-            executor(this.resolve, this.reject);
+            executor(resolve, reject);
         } catch (error) {
             this.reject(error);
         }
     }
 
     /**
-     * 只有状态是pending时，才能进行状态的转化
-     * @param {*} value 
+     * 核心方法 处理
+     * @param {*} promise2 
+     * @param {*} x 
+     * @param {*} resolve 
+     * @param {*} reject 
      */
 
 
     _createClass(Promise, [{
-        key: 'resolve',
-        value: function resolve(value) {
-            if (this.status === PENDING) {
-                this.value = value;
-                this.status = FULLFILLED;
-                this.onResolvedCallback.forEach(function (fn) {
-                    fn();
-                });
-            }
-        }
-    }, {
-        key: 'reject',
-        value: function reject(reason) {
-            if (this.status === PENDING) {
-                this.reason = reason;
-                this.status = REJECTED;
-                this.onRejectedCallback.forEach(function (fn) {
-                    fn();
-                });
-            }
-        }
-        /**
-         * 核心方法 处理
-         * @param {*} promise2 
-         * @param {*} x 
-         * @param {*} resolve 
-         * @param {*} reject 
-         */
-
-    }, {
         key: 'resolvePromise',
         value: function resolvePromise(promise2, x, resolve, reject) {
-            var _this = this;
+            var _this2 = this;
 
             if (promise2 === x) {
                 return reject(new TypeError('TypeError: Chaining cycle detected for promise #<Promise>'));
@@ -86,7 +86,7 @@ var Promise = function () {
                             } else {
                                 return;
                             }
-                            _this.resolvePromise(x, y, resolve, reject);
+                            _this2.resolvePromise(x, y, resolve, reject);
                         }, function (r) {
                             if (!called) {
                                 called = true;
@@ -120,7 +120,7 @@ var Promise = function () {
     }, {
         key: 'then',
         value: function then(onFulfilled, onRejected) {
-            var _this2 = this;
+            var _this3 = this;
 
             onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : function (data) {
                 return data;
@@ -131,45 +131,45 @@ var Promise = function () {
 
             var promise2 = void 0;
             promise2 = new Promise(function (resolve, reject) {
-                if (_this2.status === FULLFILLED) {
+                if (_this3.status === FULLFILLED) {
                     setTimeout(function () {
                         try {
-                            var x = onFulfilled(_this2.value);
-                            _this2.resolvePromise(promise2, x, resolve, reject);
+                            var x = onFulfilled(_this3.value);
+                            _this3.resolvePromise(promise2, x, resolve, reject);
                         } catch (error) {
                             reject(error);
                         }
                     }, 0);
                 }
 
-                if (_this2.status === REJECTED) {
+                if (_this3.status === REJECTED) {
                     setTimeout(function () {
                         try {
                             var x = onRejected(self.reason);
-                            _this2.resolvePromise(promise2, x, resolve, reject);
+                            _this3.resolvePromise(promise2, x, resolve, reject);
                         } catch (error) {
                             reject(error);
                         }
                     }, 0);
                 }
 
-                if (_this2.status === PENDING) {
-                    _this2.onResolvedCallback.push(function () {
+                if (_this3.status === PENDING) {
+                    _this3.onResolvedCallback.push(function () {
                         setTimeout(function () {
                             try {
-                                var x = onFulfilled(_this2.value);
-                                _this2.resolvePromise(promise2, x, resolve, reject);
+                                var x = onFulfilled(_this3.value);
+                                _this3.resolvePromise(promise2, x, resolve, reject);
                             } catch (error) {
                                 reject(error);
                             }
                         }, 0);
                     });
 
-                    _this2.onRejectedCallback.push(function () {
+                    _this3.onRejectedCallback.push(function () {
                         setTimeout(function () {
                             try {
                                 var x = onRejected(self.reason);
-                                _this2.resolvePromise(promise2, x, resolve, reject);
+                                _this3.resolvePromise(promise2, x, resolve, reject);
                             } catch (error) {
                                 reject(error);
                             }
@@ -181,17 +181,90 @@ var Promise = function () {
             return promise2;
         }
     }, {
-        key: 'defer',
-        value: function defer() {
-            var dfd = {};
-            dfd.promise = new Promise(function (resolve, reject) {
-                dfd.resolve = resolve;
-                dfd.reject = reject;
+        key: 'catch',
+        value: function _catch(onRejected) {
+            return this.then(null, onRejected);
+        }
+    }, {
+        key: 'finally',
+        value: function _finally(cb) {
+            return this.then(function (data) {
+                cb();
+                return data;
+            }, function (err) {
+                cb();
+                throw err;
             });
+        }
+    }, {
+        key: 'race',
+        value: function race(promises) {
+            return new Promise(function (resolve, reject) {
+                for (var i = 0; i < promises.length; i++) {
+                    var promise = promises[i];
+                    if (typeof promise.then == 'function') {
+                        promise.then(resolve, reject);
+                    } else {
+                        resolve(promise);
+                    }
+                }
+            });
+        }
+    }], [{
+        key: 'reject',
+        value: function reject(reason) {
+            return new Promise(function (resolve, reject) {
+                reject(reason);
+            });
+        }
+    }, {
+        key: 'resolve',
+        value: function resolve(value) {
+            return new Promise(function (resolve, reject) {
+                resolve(value);
+            });
+        }
+    }, {
+        key: 'all',
+        value: function all(promises) {
+            return new Promise(function (resolve, reject) {
+                var arr = [];
+                var i = 0;
+                function processData(index, data) {
+                    arr[index] = data;
+                    if (++i === promises.length) {
+                        resolve(arr);
+                    }
+                }
 
-            return dfd;
+                var _loop = function _loop(_i) {
+                    var promise = promises[_i];
+                    if (typeof promise.then == 'function') {
+                        promise.then(function (data) {
+                            processData(_i, data);
+                        }, reject);
+                    } else {
+                        processData(_i, promise);
+                    }
+                };
+
+                for (var _i = 0; _i < promises.length; _i++) {
+                    _loop(_i);
+                }
+            });
         }
     }]);
 
     return Promise;
 }();
+
+Promise.deferred = Promise.defer = function () {
+    var dfd = {};
+    dfd.promise = new Promise(function (resolve, reject) {
+        dfd.resolve = resolve;
+        dfd.reject = reject;
+    });
+
+    return dfd;
+};
+module.exports = Promise;
