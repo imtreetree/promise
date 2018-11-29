@@ -90,7 +90,7 @@ class Promise {
      * @param {*} onRejected 
      */
     then(onFulfilled, onRejected){
-        onFulfilled = typeof onFulfilled === 'function'? onFulfilled: data => data
+        onFulfilled = typeof onFulfilled === 'function'? onFulfilled: data => { return data }
         onRejected = typeof onRejected === 'function'? onRejected: error => { throw error }
         
         let promise2;
@@ -207,11 +207,6 @@ class Promise {
             }
         })
     }
-
-
-
-
-    
 }
 Promise.deferred = Promise.defer = function () {
     let dfd = {};
