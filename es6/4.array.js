@@ -55,7 +55,7 @@ Array.prototype.reduce = function (callback, prev) {
         if (prev != null) {
             prev = callback(prev, this[i], i, this)
         } else {
-            prev = callback(this[i], this[i + 1], i, this);
+            prev = callback(this[i], this[i + 1], i + 1, this);
             i++;//如果没有prev,内部会迭代两次，所以迭代后i++
         }
     }
