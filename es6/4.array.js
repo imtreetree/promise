@@ -70,3 +70,11 @@ let mp = [1, 2, 3].map((item) => `<li>
 ${item * 2}
 /li>`)
 console.log(mp)
+
+let name = 'hehe';
+let age = '18';
+let str3 = '${name}今年${age}岁了';
+let rr = str3.replace(/\$\{([^}]*)\}/g,function(){
+    return eval(arguments[1])
+})
+console.log(rr)

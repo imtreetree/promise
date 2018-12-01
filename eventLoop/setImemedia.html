@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <div id="box"></div>
+    <script>
+        let box = document.getElementById('box')
+
+        let observer = new MutationObserver(function(){
+            console.log('dom 更新完毕了')
+        });
+        observer.observe(box,{childList:true});
+        for(let i=0;i<5;i++){
+            box.appendChild(document.createElement('span'));
+        }
+        for(let i=0;i<10;i++){
+            box.appendChild(document.createElement('span'));
+        }
+       /* setImmediate(function(){
+            console.log('setImmediate')
+        }) */
+        /*
+        setTimeout(function(){
+            console.log('timeout')
+        },0)*/
+
+        let channel = new MessageChannel();
+        let port1 = channel.port1
+        let port2 = channel.port2
+
+        port1.postMessage('hello')
+        port2.onmessage = function(e){
+            console.log(e.data)
+        }
+        Promise.resolve().then(()=>{
+            console.log('then he')
+        })
+        console.log('world')
+        </script>
+</body>
+</html>
