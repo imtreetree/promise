@@ -8,9 +8,6 @@ let r = req('./a.json')
 let n = req('./a.js')
 console.log(n)
 
-
-
-
 //手写一个
 
 function Module(id ){

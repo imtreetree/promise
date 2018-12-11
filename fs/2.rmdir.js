@@ -34,10 +34,11 @@ function removeDir(p, callback){
         if(statObj.isDirectory()){
             //当前是目录
             fs.readdir(p, function(err,dirs){
-                if(dirs.length == 0) fs.rmdir(p, callback)
+               
                 dirs.map(dir => path.join(p, dir));
                 let index = 0
                 function next(){
+                    if(dirs.length == 0) return fs.rmdir(p, callback)
                     removeDir(dirs[index], ()=> next(index + 1))
                 }
                 next(index)
